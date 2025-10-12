@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+env/
+venv/
+*.env
+.env
+
+# Editor-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Database files
+*.sqlite3
+*.db
+*.db-journal
+
+# Logs
+*.log
+
+# Uploaded files (if applicable)
+/uploads/
+
+# Build artifacts
+/dist/
+/build/
+
+# Test reports
+/htmlcov/
+.coverage
+
+# Configuration files that might contain sensitive information
+config.ini
+settings.py # If it contains sensitive data not meant for version control
