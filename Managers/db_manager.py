@@ -7,8 +7,8 @@ class DbManager:
     async def get_db_connection():
         """Establece y devuelve una conexion a la base de datos""" 
         name_server = 'LAPTOP-OJJP1HNK'
-        database ='LIGA_PRO_FANTASY'
-        username ='fantasy_admin'
+        database ='UWM'
+        username ='administrator'
         password = 'LionelMessi'
         controlador_odbc='ODBC Driver 17 for SQL Server'
         connection_string = f'DRIVER={controlador_odbc};SERVER={name_server};DATABASE={database};UID={username};PWD={password}'
@@ -21,7 +21,7 @@ class DbManager:
         try:
             async with conn.cursor() as cursor:
                 query = "EXEC sp_SelectUser ?"
-                await cursor.execute(query, (body.email,))
+                await cursor.execute(query, (body.email))
                 row = await cursor.fetchone()
                 if row:
                     user =  UserData(username=row[0], email=row[1], password=None)
@@ -30,5 +30,3 @@ class DbManager:
                     return None
         finally:
             conn.close()
-        
-        
