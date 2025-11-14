@@ -17,7 +17,6 @@ def comprobarCedula(cedula_str: str):
     processed_digits_sum = sum(processed_digits)
     sum_mod = processed_digits_sum%10
     digito_calculado = 0 if sum_mod == 0 else 10 - sum_mod
-    print(f"digito calculado: {digito_calculado}")
     
     if (digito_calculado) == cedula[9]:
         return True

@@ -3,7 +3,7 @@ from Managers.db_manager import DbManager
 from Models.Empleados.EmpleadosModel import Empleado
 from Managers.CedulaManager import comprobarCedula
 
-router = APIRouter(prefix="/admin", tags=["Administrador"])
+router = APIRouter(prefix="/admin/empleados", tags=["Administración de empleados"])
 
 # Administracion de empleados
 
@@ -11,18 +11,14 @@ router = APIRouter(prefix="/admin", tags=["Administrador"])
 async def ingresar_empleado(body: Empleado):
     conn = await DbManager.get_db_connection()
     try:
-        print(body.Cedula)
         flag = comprobarCedula(body.Cedula)
-        print(f"flag: {flag}")
         if not flag:
-            print("entro")
             return False
         async with conn.cursor() as cursor:
             cargo_pk_query = "EXEC sp_ObtenerCargoKeyId ?"
             await cursor.execute(cargo_pk_query, body.Cargo)
             row = await cursor.fetchone()
             if row:
-                print("entro cargo")
                 cargo_keyid = row[0]
             else:
                 return False
@@ -30,7 +26,6 @@ async def ingresar_empleado(body: Empleado):
             await cursor.execute(area_pk_query, body.Area)
             row = await cursor.fetchone()
             if row:
-                print("entro area")
                 area_keyid = row[0]
             else:
                 return False
