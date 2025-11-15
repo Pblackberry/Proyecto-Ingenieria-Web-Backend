@@ -140,3 +140,26 @@ async def cancelar_horario(body: HorarioModel.HorarioRequest):
         return ReturnMessage(state=False, response_message=str(e))
     finally:
         conn.close()
+        
+@router.post("/obtener-horario")
+async def obtener_horario(body: HorarioModel.HorarioRequest):
+    conn = await DbManager.get_db_connection()
+    
+    try:
+        async with conn.cursor() as cursor:
+            query = "EXEC sp_ObtenerHorario ?, ?"
+            params = (body.Cedula_emplado, body.Fecha_inicio)
+            await cursor.execute(query, params)
+            row = await cursor.fetchone()
+            if row:
+                return HorarioModel.Horario(Nombre_empleado=row[0], Apellido_empleado=row[1],
+                                            Fecha_inicio=row[2], Fecha_final=row[3],
+                                            Horas_lunes=row[4], Horas_martes=row[5],
+                                            Horas_miercoles=row[6], Horas_jueves=row[7], Horas_viernes=row[8])
+            else: 
+                return ReturnMessage(state=False, response_message="No existe un horario en esta fecha asignado a este empleado")
+    except Exception as e:
+        return ReturnMessage(state=False, response_message=str(e))
+    finally:
+        conn.close()
+        

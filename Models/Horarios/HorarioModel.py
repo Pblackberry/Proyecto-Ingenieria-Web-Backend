@@ -14,9 +14,10 @@ class HorarioRequest(BaseModel):
     Horas_viernes: Optional[int] = None
 
 class Horario(BaseModel):
+    Nombre_empleado: Optional[str] = None
+    Apellido_empleado: Optional[str] = None
     Fecha_inicio: Optional[date] = None
     Fecha_final: Optional[date] = None
-    Empleado_id: Optional[int] = None
     Horas_lunes: Optional[int] = None
     Horas_martes: Optional[int] = None
     Horas_miercoles: Optional[int] = None
