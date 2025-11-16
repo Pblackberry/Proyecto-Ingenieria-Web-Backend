@@ -28,9 +28,9 @@ La arquitectura se basa en un enfoque MVC y está preparado para integrarse con 
    python main.py
 ## Estructura del proyecto
 Proyecto-Ingenieria-Web-Backend/
-├── Controllers/             Lógica de los endpoints / APIs
-├── Managers/                Lógica de negocio / servicios
-├── Models/                  Entidades del dominio 
-├── main.py                  Punto de entrada de la aplicación
-├── .gitignore
-└── README.md                Este archivo
+- Controllers/             Lógica de los endpoints / APIs
+- Managers/                Lógica de negocio / servicios
+- Models/                  Entidades del dominio 
+- main.py                  Punto de entrada de la aplicación
+- .gitignore
+- README.md                Este archivo
