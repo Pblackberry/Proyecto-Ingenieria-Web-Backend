@@ -16,8 +16,8 @@ async def ingresar_temporada(body: TemporadaModel.Temporada):
 
     try:
         async with conn.cursor() as cursor:
-            query = "EXEC sp_CrearTemporada ?, ?, ?, ?"
-            params = (body.nombre, body.fecha_inicio, body.fecha_final, body.multiplicador)
+            query = "EXEC sp_CrearTemporada ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            params = (body.nombre, body.fecha_inicio, body.fecha_final, body.mult_staff, body.mult_manager, body.mult_supervisor, body.mult_as, body.mult_foods, body.mult_rides, body.mult_games, body.mult_hk, body.mult_lifeguard, body.mult_maintainance)
             await cursor.execute(query, params)
             row = await cursor.fetchone()
             if row:
@@ -55,20 +55,25 @@ async def eliminar_temporada(temporada: str):
     finally:
         conn.close()
         
-@router.get("/obtener-temporadas")
-async def obtener_temporadas():
+@router.post("/obtener-temporadas")
+async def obtener_temporadas(temporada: str):
     conn = await DbManager.get_db_connection()
     try:
         async with conn.cursor() as cursor:
-            query = "EXEC sp_ObtenerTemporadas"
-            await cursor.execute(query)
-            rows = await cursor.fetchall()
-            if rows:
-                columns = [column[0] for column in cursor.description]
-                data = [dict(zip(columns, row)) for row in rows]
-                return data
+            query = "EXEC sp_ObtenerTemporadaId ?"
+            await cursor.execute(query, temporada)
+            row = await cursor.fetchone()
+            if row:
+                temporada_id = row[0]
             else:
-                return ReturnMessage(state=False, response_message="No hay temporadas registradas")
+                return ReturnMessage(state=False, response_message="No existe una temporada con el nombre proporcionado")
+            query = "EXEC sp_ObtenerTemporadas ?"
+            await cursor.execute(query, int(temporada_id))
+            row = await cursor.fetchone()
+            if row:
+                return TemporadaModel.Temporada( nombre=row[0], fecha_inicio=row[1], fecha_final=row[2], mult_staff=row[3], mult_manager=row[4], mult_supervisor=row[5], mult_as=row[6], mult_foods=row[7], mult_games=row[8], mult_hk=row[9], mult_rides=row[10], mult_maintainance=row[11], mult_lifeguard=row[12])
+            else:
+                return ReturnMessage(state=False, response_message="Error al obtener temporada")
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:

@@ -10,7 +10,7 @@ app.include_router(empleador_router)
 app.include_router(horario_router)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # tu frontend
+    allow_origins=["http://localhost:5173"],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
