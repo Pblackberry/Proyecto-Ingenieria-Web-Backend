@@ -23,3 +23,12 @@ class Horario(BaseModel):
     Horas_miercoles: Optional[int] = None
     Horas_jueves: Optional[int] = None
     Horas_viernes: Optional[int] = None
+    
+class AsistenciaRequest(BaseModel):
+    Cedula: Optional[str] = None
+    Fecha_inicio: Optional[date] = None
+    Horas_lunes: Optional[int] = None
+    Horas_martes: Optional[int] = None
+    Horas_miercoles: Optional[int] = None
+    Horas_jueves: Optional[int] = None
+    Horas_viernes: Optional[int] = None

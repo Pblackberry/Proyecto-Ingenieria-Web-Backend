@@ -5,6 +5,7 @@ from Models.Horarios import TemporadaModel, HorarioModel
 from Models.Mensajes.ReturnMessage import ReturnMessage
 from Controllers.Administrator.EmpleadoAdministrator import obtener_empleado
 from datetime import date, timedelta
+from Controllers.Core import AsistenciaManager
 
 router = APIRouter(prefix="/admin/horario", tags=["Administración de horarios"])
 
@@ -168,3 +169,54 @@ async def obtener_horario(body: HorarioModel.HorarioRequest):
     finally:
         conn.close()
         
+# Asistencia
+
+@router.post("/registrar-asistencia")
+async def registrar_asistencia(body: HorarioModel.AsistenciaRequest):
+    
+    if body.Fecha_inicio.weekday() != 0:
+        return ReturnMessage(state=False, response_message="Fecha de inicio invalida, el horario semanal debe comenzar en un lunes")
+    fecha_final = body.Fecha_inicio + timedelta(days=4)
+    conn = await DbManager.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            query = "EXEC sp_ObtenerEmpleadoKeyId ?"
+            await cursor.execute(query, body.Cedula)
+            row = await cursor.fetchone()
+            if row:
+                empleado_id = row[0]
+            else:
+                return ReturnMessage(state=False, response_message="No hay un empleado registrado con esta cedula")
+            
+            query = "EXEC sp_ObtenerHorarioId ?, ?"
+            params = (empleado_id, body.Fecha_inicio)
+            await cursor.execute(query, params)
+            row = await cursor.fetchone()
+            if row:
+                horario_id = row[0]
+            else:
+                return ReturnMessage(state=False, response_message="Horario no registrado para esta feha")
+            query = "EXEC sp_RegistrarAsistencia ?, ?, ?, ?, ?, ?, ?"
+            params = (empleado_id, horario_id, body.Horas_lunes, body.Horas_martes, body.Horas_miercoles, body.Horas_jueves, body.Horas_viernes)
+            await cursor.execute(query, params)
+            row = await cursor.fetchone()
+            if row:
+                if row[0] == 0:
+                    return ReturnMessage(state=True, response_message="Asistencia registrada")
+                else:
+                    print("1")
+                    return ReturnMessage(state=False, response_message="Asistencia ya registrada")
+                
+            else:
+                print("2")
+                return ReturnMessage(state=False, response_message="Error al registrar asistencia")
+            
+    except Exception as e:
+        return ReturnMessage(state=False, response_message=str(e))
+    finally:
+        conn.close()
+
+@router.get("test")
+async def test():
+    x = date(2025, 12, 1)
+    await AsistenciaManager.CalculateAssistance(x, "1755430798")
