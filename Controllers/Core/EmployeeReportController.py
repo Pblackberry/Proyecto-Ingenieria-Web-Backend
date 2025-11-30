@@ -1,0 +1,82 @@
+from fastapi import FastAPI, APIRouter, HTTPException
+from Managers.db_manager import DbManager
+from Models.Empleados.EmpleadosModel import Empleado
+from Models.Horarios import TemporadaModel, HorarioModel
+from Models.Mensajes.ReturnMessage import ReturnMessage
+from Controllers.Administrator.EmpleadoAdministrator import obtener_empleado
+from datetime import date, timedelta
+from Managers.Core import AsistenciaManager, SueldoManager
+from Models.Core.ReportModel import EmployeeReportRequest, EmployeeReport, EmployeeReportReponse
+from Models.Core.EmployeeModel import EmployeeData
+import calendar
+
+router = APIRouter(prefix="/core/generate-report", tags=["Core"])
+
+@router.post("/obtener-reporte")
+async def obtener_reporte(body: EmployeeReportRequest):
+    conn = await DbManager.get_db_connection()
+    try:
+
+        async with conn.cursor() as cursor:
+            query = "EXEC sp_ObtenerReportePersonal ?, ?, ?"
+            params = (body.Cedula, body.Fecha_inicio.month, body.Fecha_inicio.year)
+            await cursor.execute(query, params)
+            row = await cursor.fetchone()
+            if row:
+                PersonalReport = EmployeeReport(Ano=row[0], Mes=row[1], Cedula=row[2], Horas_trabajadas=row[3], Horas_Extra=row[4], Horas_Faltas=row[5], Faltas=row[6], Sueldo_mensual=row[7])
+                previews_month = body.Fecha_inicio.month - 1
+                if previews_month == 0:
+                    previews_month = 12
+                previews_month_report = None
+                query = "EXEC sp_ObtenerReportePersonal ?, ?, ?"
+                params = (body.Cedula, previews_month, body.Fecha_inicio.year)
+                await cursor.execute(query, params)
+                row = await cursor.fetchone()
+                if row:
+                    previews_month_report = EmployeeReport(Ano=row[0], Mes=row[1], Cedula=row[2], Horas_trabajadas=row[3], Horas_Extra=row[4], Horas_Faltas=row[5], Faltas=row[6], Sueldo_mensual=row[7])
+                response = EmployeeReportReponse(Reporte= PersonalReport, Reporte_mes_previo=previews_month_report)
+                # print(final_report)
+                return response
+                # return PersonalReport
+            query = "EXEC sp_ObtenerEmployeeData ?"
+            await cursor.execute(query, body.Cedula)
+            row = await cursor.fetchone()
+            if row:
+                employee_data = EmployeeData(Cedula=body.Cedula, Nombre=row[0], Apellido=row[1], Cargo=row[2], Sueldo_hora=row[3], Area=row[4])
+            else:
+                return EmployeeReport()
+            print("Employee data: ", employee_data)
+            last_month_day = calendar.monthrange(body.Fecha_inicio.year, body.Fecha_inicio.month)[1]
+            las_month_date = date(body.Fecha_inicio.year, body.Fecha_inicio.month, last_month_day)
+            assistance_report = await AsistenciaManager.CalculateAssistance(body.Fecha_inicio, las_month_date, body.Cedula)
+            if assistance_report.Total_hours == 0:
+                return EmployeeReport()
+            query = "EXEC sp_ObtenerTemporadaActual ?"
+            await cursor.execute(query, body.Fecha_inicio)
+            row = await cursor.fetchone()
+            if row:
+                temporada_actual = TemporadaModel.Temporada(nombre=row[0], fecha_inicio=None, fecha_final=None, mult_staff=row[1], mult_supervisor=row[2], mult_manager=row[3], mult_as=row[4], mult_foods=row[5], mult_games=row[6], mult_hk=row[7], mult_maintainance=row[8], mult_rides=row[9], mult_lifeguard=row[10])
+            else:
+                return EmployeeReport()
+            paycheck_report = SueldoManager.CalcMonthlyPaycheck(temporada_actual, assistance_report, employee_data)
+            final_report = EmployeeReport(Ano=int(body.Fecha_inicio.year), Mes=int(body.Fecha_inicio.month), Cedula=body.Cedula, Horas_trabajadas=assistance_report.Total_hours, Horas_Extra=assistance_report.Extra_hours, Horas_Faltas=assistance_report.Missed_hours, Faltas=assistance_report.Missed_days, Sueldo_mensual=round(paycheck_report.Payment_with_mult, 2))
+            previews_month = body.Fecha_inicio.month - 1
+            if previews_month == 0:
+                previews_month = 12
+            previews_month_report = None
+            query = "EXEC sp_ObtenerReportePersonal ?, ?, ?"
+            params = (body.Cedula, previews_month, body.Fecha_inicio.year)
+            await cursor.execute(query, params)
+            row = await cursor.fetchone()
+            if row:
+                previews_month_report = EmployeeReport(Ano=row[0], Mes=row[1], Cedula=row[2], Horas_trabajadas=row[3], Horas_Extra=row[4], Horas_Faltas=row[5], Faltas=row[6], Sueldo_mensual=row[7])
+            response = EmployeeReportReponse(Reporte= final_report, Reporte_mes_previo=previews_month_report)
+            # print(final_report)
+            return response
+    except Exception as e:
+        print("exception: ", str(e))
+        return None
+    finally:
+        await conn.close()
+    
+    

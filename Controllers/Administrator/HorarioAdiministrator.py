@@ -5,7 +5,7 @@ from Models.Horarios import TemporadaModel, HorarioModel
 from Models.Mensajes.ReturnMessage import ReturnMessage
 from Controllers.Administrator.EmpleadoAdministrator import obtener_empleado
 from datetime import date, timedelta
-from Controllers.Core import AsistenciaManager
+from Managers.Core import AsistenciaManager
 
 router = APIRouter(prefix="/admin/horario", tags=["Administración de horarios"])
 
@@ -216,7 +216,8 @@ async def registrar_asistencia(body: HorarioModel.AsistenciaRequest):
     finally:
         conn.close()
 
-@router.get("test")
-async def test():
-    x = date(2025, 12, 1)
-    await AsistenciaManager.CalculateAssistance(x, "1755430798")
+# @router.get("test")
+# async def test():
+#     x = date(2025, 12, 1)
+#     response = await AsistenciaManager.CalculateAssistance(x, "1755430798")
+#     return response
