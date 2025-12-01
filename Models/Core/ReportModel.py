@@ -24,5 +24,6 @@ class EmployeeReport(BaseModel):
     Sueldo_mensual: Optional[float] = 0
 
 class EmployeeReportReponse(BaseModel):
+    Response_msg: Optional[str] = None
     Reporte: Optional[EmployeeReport] = None
     Reporte_mes_previo: Optional[EmployeeReport] = None
