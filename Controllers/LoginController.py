@@ -18,6 +18,8 @@ async def insert_user(body: UserData):
         return {"message":"usuario insertado exitosamente"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+    finally:
+        await conn.close()
     
 @router.post("/read-user")
 async def read_user(body: UserData):
@@ -46,6 +48,7 @@ async def update_user(body: UserData):
             return UserData(username=None, email=None, password=None)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
+    
     
 @router.post("/delete-user")
 async def delete_user(body: UserData):

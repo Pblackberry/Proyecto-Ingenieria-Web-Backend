@@ -6,7 +6,7 @@ from datetime import date
 class HorarioRequest(BaseModel):
     Fecha_inicio: Optional[date] = None
     Fecha_final: Optional[date] = None
-    Cedula_emplado: Optional[str] = None
+    Cedula_empleado: Optional[str] = None
     Horas_lunes: Optional[int] = None
     Horas_martes: Optional[int] = None
     Horas_miercoles: Optional[int] = None

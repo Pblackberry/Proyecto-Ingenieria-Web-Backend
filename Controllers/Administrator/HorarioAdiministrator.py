@@ -34,7 +34,7 @@ async def ingresar_temporada(body: TemporadaModel.Temporada):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
         
 @router.post("/eliminar-temporada")
 async def eliminar_temporada(temporada: str):
@@ -54,7 +54,7 @@ async def eliminar_temporada(temporada: str):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
         
 @router.post("/obtener-temporadas")
 async def obtener_temporadas(temporada: str):
@@ -78,7 +78,7 @@ async def obtener_temporadas(temporada: str):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close
+        await conn.close
         
 @router.get("/obtener-temporadas-all")
 async def obtener_all_temporadas():
@@ -97,7 +97,7 @@ async def obtener_all_temporadas():
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close
+        await conn.close
 # Horarios
 
 @router.post("/asignar-horario")
@@ -110,7 +110,7 @@ async def asignar_horario(body: HorarioModel.HorarioRequest):
     try:
         async with conn.cursor() as cursor:
             query = "EXEC sp_ObtenerEmpleadoKeyId ?"
-            await cursor.execute(query, body.Cedula_emplado)
+            await cursor.execute(query, body.Cedula_empleado)
             row = await cursor.fetchone()
             if row:
                 key_id = row[0]
@@ -132,7 +132,7 @@ async def asignar_horario(body: HorarioModel.HorarioRequest):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
         
 @router.post("/cancelar-horario")
 async def cancelar_horario(body: HorarioModel.HorarioRequest):
@@ -142,7 +142,7 @@ async def cancelar_horario(body: HorarioModel.HorarioRequest):
     try:
         async with conn.cursor() as cursor:
             query = "EXEC sp_ObtenerEmpleadoKeyId ?"
-            await cursor.execute(query, body.Cedula_emplado)
+            await cursor.execute(query, body.Cedula_empleado)
             row = await cursor.fetchone()
             if row:
                 key_id = row[0]
@@ -163,7 +163,7 @@ async def cancelar_horario(body: HorarioModel.HorarioRequest):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
         
 @router.post("/obtener-horario")
 async def obtener_horario(body: HorarioModel.HorarioRequest):
@@ -172,7 +172,7 @@ async def obtener_horario(body: HorarioModel.HorarioRequest):
     try:
         async with conn.cursor() as cursor:
             query = "EXEC sp_ObtenerHorario ?, ?"
-            params = (body.Cedula_emplado, body.Fecha_inicio)
+            params = (body.Cedula_empleado, body.Fecha_inicio)
             await cursor.execute(query, params)
             row = await cursor.fetchone()
             if row:
@@ -185,7 +185,7 @@ async def obtener_horario(body: HorarioModel.HorarioRequest):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
         
 # Asistencia
 
@@ -232,7 +232,7 @@ async def registrar_asistencia(body: HorarioModel.AsistenciaRequest):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        conn.close()
+        await conn.close()
 
 # @router.get("test")
 # async def test():
