@@ -79,7 +79,25 @@ async def obtener_temporadas(temporada: str):
         return ReturnMessage(state=False, response_message=str(e))
     finally:
         conn.close
-
+        
+@router.get("/obtener-temporadas-all")
+async def obtener_all_temporadas():
+    conn = await DbManager.get_db_connection()
+    try:
+        async with conn.cursor() as cursor:
+            query = "sp_ObtenerTemporadasAll"
+            await cursor.execute(query)
+            rows = await cursor.fetchall()
+            if rows:
+                columns = [column[0] for column in cursor.description]
+                data = [dict(zip(columns, row)) for row in rows]
+                return data
+            else:
+                return ReturnMessage(state=False, response_message="No hay temporadas registradas")
+    except Exception as e:
+        return ReturnMessage(state=False, response_message=str(e))
+    finally:
+        conn.close
 # Horarios
 
 @router.post("/asignar-horario")
