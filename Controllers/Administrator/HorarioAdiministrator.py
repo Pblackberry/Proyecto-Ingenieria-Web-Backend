@@ -78,7 +78,7 @@ async def obtener_temporadas(temporada: str):
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        await conn.close
+        await conn.close()
         
 @router.get("/obtener-temporadas-all")
 async def obtener_all_temporadas():
@@ -97,7 +97,7 @@ async def obtener_all_temporadas():
     except Exception as e:
         return ReturnMessage(state=False, response_message=str(e))
     finally:
-        await conn.close
+        await conn.close()
 # Horarios
 
 @router.post("/asignar-horario")

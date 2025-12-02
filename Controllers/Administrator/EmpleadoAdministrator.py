@@ -36,6 +36,8 @@ async def ingresar_empleado(body: Empleado):
         return True
     except Exception:
         return False
+    finally:
+        await conn.close()
 
 @router.post("/obtener-empleado")
 async def obtener_empleado(cedula: str):
@@ -82,4 +84,6 @@ async def eliminar_empleado(cedula: str):
             return True
     except Exception:
         return False
+    finally:
+        await conn.close()
         
