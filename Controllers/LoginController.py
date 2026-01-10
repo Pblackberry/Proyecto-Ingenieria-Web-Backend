@@ -1,6 +1,7 @@
 import logging
 from fastapi import FastAPI, APIRouter, HTTPException, Response
 from Managers.db_manager import DbManager
+from Managers.db_manager import DbLoginService
 from Models.LoginModels import UserData
 from datetime import datetime, timedelta
 from typing import Optional
@@ -52,64 +53,21 @@ async def insert_user(body: UserData):
         await conn.close()
     
 @router.post("/read-user")
-async def read_user(body: UserData, response: Response):
-    """
-    Verifica las credenciales, genera un JWT si es exitoso y lo establece en una cookie.
-    """
-    try:
-        # 1. Verificar Credenciales
-        # DbManager debe verificar el username/email y el password
-        user = await DbManager.try_get_user(body)
-        
-        if user is None:
-            # Es importante no dar detalles específicos de por qué falló
-            raise HTTPException(
-                status_code=401,
-                detail="Credenciales de usuario o contraseña inválidas",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+async def read_user(body: UserData):
 
-        # 2. Generar el Token JWT
-        # El contenido del token (payload) suele ser el ID o el username del usuario.
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={"sub": user.username}, # 'sub' es la convención para Subject
-            expires_delta=access_token_expires
-        )
-
-        # 3. Establecer el Token en una Cookie HTTP
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,       # La cookie no es accesible por JavaScript (seguridad XSS)
-            samesite='Lax',      # Protección contra CSRF
-            secure=True,         # Solo se envía a través de HTTPS (requiere que el servidor lo soporte)
-            max_age=access_token_expires.total_seconds()
-        )
-        
-        # 4. Retornar Respuesta Exitosa
-        # Se puede retornar un mensaje de éxito o los datos del usuario (sin password).
-        return {"message": "Inicio de sesión exitoso", "username": user.username}
-
-    except HTTPException:
-        # Volver a lanzar la excepción 401
-        raise
+    try: 
+        user = await DbLoginService.try_get_user(body.email)
+        if user is not None:
+            return user
+        else:
+            return UserData(username=None, email=None, password=None)
     except Exception as e:
-        # Manejo de otros errores (ej. base de datos)
-        raise HTTPException(status_code=500, detail="Error interno del servidor") from e
-    # try: 
-    #     user = await DbManager.try_get_user(body)
-    #     if user is not None:
-    #         return user
-    #     else:
-    #         return UserData(username=None, email=None, password=None)
-    # except Exception as e:
-    #     raise HTTPException(status_code=500, detail=str(e)) from e
+        raise HTTPException(status_code=500, detail=str(e)) from e
     
 @router.post("/update-user")
 async def update_user(body: UserData):
     try:
-        user = await DbManager.try_get_user(body)
+        user = await DbLoginService.try_get_user(body.email)
         if user is not None:
             db_connection = await DbManager.get_db_connection()
             async with db_connection.cursor() as cursor:
@@ -127,7 +85,7 @@ async def update_user(body: UserData):
 @router.post("/delete-user")
 async def delete_user(body: UserData):
     try:
-        user = await DbManager.try_get_user(body)
+        user = await DbLoginService.try_get_user(body.email)
         if user is not None:
             db_connection = await DbManager.get_db_connection()
             async with db_connection.cursor() as cursor:

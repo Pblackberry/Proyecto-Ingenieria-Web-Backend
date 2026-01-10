@@ -15,13 +15,14 @@ class DbManager:
         conn = await aioodbc.connect(dsn=connection_string, autocommit=True)
         return conn
     
+class DbLoginService:
     @staticmethod
-    async def try_get_user(body: UserData):
+    async def try_get_user(email: str) -> UserData:
         conn = await DbManager.get_db_connection()
         try:
             async with conn.cursor() as cursor:
                 query = "EXEC sp_SelectUser ?"
-                await cursor.execute(query, (body.email))
+                await cursor.execute(query, (email))
                 row = await cursor.fetchone()
                 if row:
                     user =  UserData(username=row[0], email=row[1], password=None)

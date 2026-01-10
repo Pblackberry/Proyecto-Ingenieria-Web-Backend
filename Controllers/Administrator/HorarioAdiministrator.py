@@ -234,8 +234,3 @@ async def registrar_asistencia(body: HorarioModel.AsistenciaRequest):
     finally:
         await conn.close()
 
-# @router.get("test")
-# async def test():
-#     x = date(2025, 12, 1)
-#     response = await AsistenciaManager.CalculateAssistance(x, "1755430798")
-#     return response
