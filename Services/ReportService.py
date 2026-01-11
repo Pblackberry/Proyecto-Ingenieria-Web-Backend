@@ -6,9 +6,10 @@ from Models.Horarios import TemporadaModel, HorarioModel
 from Models.Mensajes.ReturnMessage import ReturnMessage
 from Controllers.Administrator.EmpleadoAdministrator import obtener_empleado
 from datetime import date, timedelta
-from Managers.Core import AsistenciaManager, SueldoManager
+from Managers.Core import AsistenciaManager
 from Models.Core.ReportModel import EmployeeReportRequest, EmployeeReport, EmployeeReportReponse
 from Models.Core.EmployeeModel import EmployeeData
+from Managers.Core.Strategies.SalaryStrategyFactory import SalaryStrategyFactory
 import calendar
 
 class SqlReportService(IReportService):
@@ -62,7 +63,8 @@ class SqlReportService(IReportService):
                     temporada_actual = TemporadaModel.Temporada(nombre=row[0], fecha_inicio=None, fecha_final=None, mult_staff=row[1], mult_supervisor=row[2], mult_manager=row[3], mult_as=row[4], mult_foods=row[5], mult_games=row[6], mult_hk=row[7], mult_maintainance=row[8], mult_rides=row[9], mult_lifeguard=row[10])
                 else:
                     temporada_actual = TemporadaModel.Temporada()
-                paycheck_report = SueldoManager.CalcMonthlyPaycheck(temporada_actual, assistance_report, employee_data)
+                strategy = SalaryStrategyFactory.get_strategy(employee_data)
+                paycheck_report = strategy.calculate_salary(temporada_actual, assistance_report, employee_data)
                 final_report = EmployeeReport(Ano=int(body.Fecha_inicio.year), Mes=int(body.Fecha_inicio.month), Cedula=body.Cedula, Horas_trabajadas=assistance_report.Total_hours, Horas_Extra=assistance_report.Extra_hours, Horas_Faltas=assistance_report.Missed_hours, Faltas=assistance_report.Missed_days, Sueldo_mensual=round(paycheck_report.Payment_with_mult, 2))
                 previews_month = body.Fecha_inicio.month - 1
                 if previews_month == 0:

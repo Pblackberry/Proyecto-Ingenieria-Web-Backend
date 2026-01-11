@@ -6,7 +6,7 @@ class DbManager:
     @staticmethod
     async def get_db_connection():
         """Establece y devuelve una conexion a la base de datos""" 
-        name_server = 'LAPTOP-OJJP1HNK'
+        name_server = 'SEBASLAPTOP'
         database ='UWM'
         username ='administrator'
         password = 'LionelMessi'
