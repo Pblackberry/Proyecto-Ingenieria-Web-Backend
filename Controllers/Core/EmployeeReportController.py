@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from Models.Core.ReportModel import EmployeeReportRequest, EmployeeReportReponse
+from Models.Core.ReportModel import EmployeeReportRequest, OutstandingEmployeesRequest
 from Interfaces.IReportService import IReportService
 from Services.ReportService import SqlReportService
 
@@ -14,5 +14,10 @@ async def obtener_reporte(
     service: IReportService = Depends(get_report_service)
 ):
     return await service.generar_reporte_empleado(body)
-    
-    
+
+@router.post("/obtener-sobresalientes")
+async def obtener_empleados_sobresalientes(
+    body: OutstandingEmployeesRequest,
+    service: IReportService = Depends(get_report_service)
+):
+    return await service.obtener_sobresalientes(body)

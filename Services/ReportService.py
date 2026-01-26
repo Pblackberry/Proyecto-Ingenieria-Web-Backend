@@ -7,7 +7,7 @@ from Models.Mensajes.ReturnMessage import ReturnMessage
 from Controllers.Administrator.EmpleadoAdministrator import obtener_empleado
 from datetime import date, timedelta
 from Managers.Core import AsistenciaManager
-from Models.Core.ReportModel import EmployeeReportRequest, EmployeeReport, EmployeeReportReponse
+from Models.Core.ReportModel import EmployeeReportRequest, EmployeeReport, EmployeeReportReponse, OutstandingEmployeesRequest, OutstandingEmployeesResponse, CompleteReport
 from Models.Core.EmployeeModel import EmployeeData
 from Managers.Core.Strategies.SalaryStrategyFactory import SalaryStrategyFactory
 import calendar
@@ -64,7 +64,7 @@ class SqlReportService(IReportService):
                 else:
                     temporada_actual = TemporadaModel.Temporada()
                 strategy = SalaryStrategyFactory.get_strategy(employee_data)
-                paycheck_report = strategy.calculate_salary(temporada_actual, assistance_report, employee_data)
+                paycheck_report = strategy.CalcMonthlyPaycheck(temporada_actual, assistance_report, employee_data)
                 final_report = EmployeeReport(Ano=int(body.Fecha_inicio.year), Mes=int(body.Fecha_inicio.month), Cedula=body.Cedula, Horas_trabajadas=assistance_report.Total_hours, Horas_Extra=assistance_report.Extra_hours, Horas_Faltas=assistance_report.Missed_hours, Faltas=assistance_report.Missed_days, Sueldo_mensual=round(paycheck_report.Payment_with_mult, 2))
                 previews_month = body.Fecha_inicio.month - 1
                 if previews_month == 0:
@@ -90,5 +90,62 @@ class SqlReportService(IReportService):
         except Exception as e:
             print("exception: ", str(e))
             return EmployeeReportReponse(Response_msg="Error al generar reporte")               
+        finally:
+            await conn.close()
+            
+    async def obtener_sobresalientes(self, body: OutstandingEmployeesRequest) -> OutstandingEmployeesResponse:
+        conn = await DbManager.get_db_connection()
+        best_reports = []
+        try:
+            async with conn.cursor() as cursor:
+                query = "EXEC sp_ObtenerReportesXMes ?, ?"
+                params = (body.Ano, body.Mes)
+                await cursor.execute(query, params)
+                rows = await cursor.fetchall()
+                if len(rows) >= 5:
+                    for report in rows:
+                        c_report = CompleteReport(
+                            Ano=report[0],
+                            Mes=report[1],
+                            Nombre=report[2],
+                            Apellido=report[3],
+                            Horas_trabajadas=report[4],
+                            Horas_Extra=report[5],
+                            Horas_Faltas=report[6],
+                            Faltas=report[7],
+                            Sueldo_mensual=report[8],
+                            Score=0
+                        )
+                        c_report.calc_score()
+                        if len(best_reports) < 5:
+                            best_reports.append(c_report)
+                        else:
+                            worst_report = min(best_reports, key=lambda x: x.Score)
+
+                            if c_report.Score > worst_report.Score:
+                                best_reports.remove(worst_report)
+                                best_reports.append(c_report)
+                    response = OutstandingEmployeesResponse(
+                        Response_msg= "5 mejores empleados del mes encontrados",
+                        Ano = body.Ano,
+                        Mes = body.Mes,
+                        Empleados = best_reports
+                    )
+                    return response    
+                else:
+                    return OutstandingEmployeesResponse(
+                        Response_msg= "No se han generado reportes para este mes",
+                        Ano = body.Ano,
+                        Mes = body.Mes,
+                        Empleados = best_reports
+                    )
+        except Exception as e:
+            print("exception: ", str(e))
+            return OutstandingEmployeesResponse(
+                        Response_msg= "Error al obtener 5 mejores empleados ",
+                        Ano = body.Ano,
+                        Mes = body.Mes,
+                        Empleados = best_reports
+                    )                
         finally:
             await conn.close()

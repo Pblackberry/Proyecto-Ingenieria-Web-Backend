@@ -45,7 +45,7 @@ class StandardSalaryStrategy(ISalaryStrategy):
                 return season.mult_as
 
 class ManagerSalaryStrategy(ISalaryStrategy):
-    def calculate_salary(self, season: Temporada, assistance: AssistanceReport, employee_data: EmployeeData) -> Salary:
+    def CalcMonthlyPaycheck(self, season: Temporada, assistance: AssistanceReport, employee_data: EmployeeData) -> Salary:
         paycheck = Salary()
 
         paycheck.Normal_hours = assistance.Total_hours * employee_data.Sueldo_hora 
