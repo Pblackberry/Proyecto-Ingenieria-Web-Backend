@@ -12,12 +12,6 @@ origins = [
     "http://localhost:5173", 
     "https://frontend-ingweb.onrender.com"
 ]
-
-env_origins = os.getenv("ALLOWED_ORIGINS")
-
-if env_origins:
-    origins.extend(env_origins.split(","))
-
 app.include_router(login_router)
 app.include_router(empleador_router)
 app.include_router(horario_router)
